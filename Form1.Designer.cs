@@ -28,10 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             splitContainer1 = new SplitContainer();
             ChatListBox = new ListBox();
             SendTextBox = new TextBox();
-            button1 = new Button();
+            SendButton = new Button();
+            RecieveChatTimer = new System.Windows.Forms.Timer(components);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
@@ -52,7 +54,7 @@
             // splitContainer1.Panel2
             // 
             splitContainer1.Panel2.Controls.Add(SendTextBox);
-            splitContainer1.Panel2.Controls.Add(button1);
+            splitContainer1.Panel2.Controls.Add(SendButton);
             splitContainer1.Panel2.RightToLeft = RightToLeft.No;
             splitContainer1.Size = new Size(800, 450);
             splitContainer1.SplitterDistance = 400;
@@ -78,15 +80,15 @@
             SendTextBox.Size = new Size(686, 26);
             SendTextBox.TabIndex = 1;
             // 
-            // button1
+            // SendButton
             // 
-            button1.Location = new Point(704, 3);
-            button1.Name = "button1";
-            button1.Size = new Size(93, 40);
-            button1.TabIndex = 0;
-            button1.Text = "Send";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            SendButton.Location = new Point(704, 3);
+            SendButton.Name = "SendButton";
+            SendButton.Size = new Size(93, 40);
+            SendButton.TabIndex = 0;
+            SendButton.Text = "Send";
+            SendButton.UseVisualStyleBackColor = true;
+            SendButton.Click += button1_Click;
             // 
             // Form1
             // 
@@ -108,8 +110,9 @@
         #endregion
 
         private SplitContainer splitContainer1;
-        private TextBox SendTextBox;
-        private Button button1;
-        private ListBox ChatListBox;
+        public Button SendButton;
+        public ListBox ChatListBox;
+        public TextBox SendTextBox;
+        public System.Windows.Forms.Timer RecieveChatTimer;
     }
 }

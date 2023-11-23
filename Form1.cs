@@ -11,11 +11,17 @@ namespace LocalGPTController
         private Twitch twitch;
         public static Form1 Instance { get; private set; }
 
+        public static float Temperture = 0.2f;
+        public static int MaxToken = 100;
+
+        public static string FailToCommnet = "[자동 응답 실패]";
+
+        public bool isWorkingToLM = false;
         public Form1()
         {
             InitializeComponent();
-            twitch = new Twitch("Bot");
             Instance = this;
+            twitch = new Twitch("Bot");
         }
 
         public void onAddContent(string text = null)
@@ -44,10 +50,33 @@ namespace LocalGPTController
 
             ChatListBox.SelectedIndex = ChatListBox.Items.Count - 1;
         }
+        public static void OnAddContent(string text = null)
+        {
+            string printText;
+
+            if (text == null)
+            {
+                printText = Form1.Instance.SendTextBox.Text;
+            }
+            else
+            {
+                printText = text;
+            }
+
+            Form1.Instance.ChatListBox.Items.Add(printText);
+
+            Form1.Instance.SendTextBox.Clear();
+            Form1.Instance.ChatListBox.Update();
+
+            Form1.Instance.ChatListBox.SelectedIndex = Form1.Instance.ChatListBox.Items.Count - 1;
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
-            //onAddContent();
-            onSend();
+            if (isWorkingToLM == false)
+            {
+                onSend(SendTextBox.Text);
+            }
         }
 
         private void ChatListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -55,20 +84,31 @@ namespace LocalGPTController
 
         }
 
-        private async void onSend()
+        public async void onSend(string message)
         {
             //twitch.SendMessage(SendTextBox.Text);
 
+            {
+                SendButton.Text = "Wait";
+                SendButton.Enabled = false;
+                isWorkingToLM = true;
+            }
+
             string url = "http://localhost:1234/v1/chat/completions";
 
+            if (String.IsNullOrEmpty(message))
+            {
+                OnRecievedLLM();
+                return;
+            }
 
             List<LM_Message> messages = new List<LM_Message>()
             {
                 new LM_Message(Role.system.ToString(), "Change all answers to Korean."),
-                new LM_Message(Role.user.ToString(), SendTextBox.Text)
+                new LM_Message(Role.user.ToString(), message)
             };
 
-            var seri = JsonConvert.SerializeObject(new LM_RequestDto(messages, max_token: 100));
+            var seri = JsonConvert.SerializeObject(new LM_RequestDto(messages, Temperture, MaxToken));
             //var seri = JsonConvert.SerializeObject(new LM_RequestDto(SendTextBox.Text));
             //      JsonSerializer.Serialize(new LM_RequestDto(SendTextBox.Text));
 
@@ -80,13 +120,13 @@ namespace LocalGPTController
                 content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
                 var teskRequest = await request.PostAsync(url, content);
-                //await request.PostAsJsonAsync(url, new LM_RequestDto(messages, max_token: 100));
-                var teskConvert = teskRequest.Content.ReadAsStringAsync();
-                teskConvert.Wait();
+                var teskConvert = await teskRequest.Content.ReadAsStringAsync();
+
+                //teskConvert.Wait();
 
                 //==== 기다리는중에 전송 버튼 클릭이벤트 차단 추가
 
-                var deseri_result = JsonConvert.DeserializeObject<LM_ResponseDto>(teskConvert.Result);
+                var deseri_result = JsonConvert.DeserializeObject<LM_ResponseDto>(teskConvert);
 
                 if (deseri_result == null)
                 {
@@ -94,25 +134,39 @@ namespace LocalGPTController
                 }
                 else
                 {
+                    string result = (string.IsNullOrWhiteSpace(deseri_result.choices[^1].message.content)) ?
+                        FailToCommnet :
+                        deseri_result.choices[^1].message.content;
 
-                    if (string.IsNullOrWhiteSpace(deseri_result.choices[^1].message.content))
-                    {
-                        onAddContent("응답하기 싫습니다.");
-                    }
-                    else
-                    {
-                        onAddContent(deseri_result.choices[^1].message.content);
-                    }
+                    onAddContent(result);
+                    twitch.SendMessage(result);
                 }
 
 
-                //=아니 대체 실행이 안되지? - 인식을 못할때 엔터만 값으로 보냄
+            }
+            catch (HttpRequestException e)
+            {
+                onAddContent("실패 : 대부분 LM Studio 구동 확인 / " + e.Message);
+                //twitch.SendMessage("[AI 구동 하지 않음]");
             }
             catch (Exception ex)
             {
                 onAddContent("실패 : " + ex.Message);//user , system 으로 string 값으로 저장
-                //MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                                   //MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message + "\n" + ex.StackTrace);
             }
+            finally
+            {
+                OnRecievedLLM();
+            }
+        }
+
+        private async void OnRecievedLLM()
+        {
+            SendButton.Text = "Send";
+            SendButton.Enabled = true;
+            isWorkingToLM = false;
+            //await twitch.ReadFromStreamAsync();
         }
     }
 }
