@@ -125,7 +125,7 @@ namespace LocalGPTController.script
 
                         if (string.IsNullOrEmpty(sendMessage[1]) == false)
                         {
-                            Form1.Instance.onAddContent("  [Processing]");
+                            Form1.Instance.onAddContent("[Processing] " + sendMessage[0] + " : " + sendMessage[1]);
 
                             Form1.Instance.onSend(sendMessage[1]);
                         }
@@ -153,7 +153,7 @@ namespace LocalGPTController.script
             }
         }
         
-        public void SendMessage(string message)
+        public async void SendMessage(string message)
         {
             /*
             using (StreamWriter sw = new StreamWriter(tcpClient.GetStream()))
@@ -163,12 +163,14 @@ namespace LocalGPTController.script
 
             try
             {
-                outputStream.WriteLine("PRIVMSG #" + channelName + " :" + message);
+                //MessageBox.Show(message.Replace("\n", " "));
+                //outputStream.Write("PRIVMSG #" + channelName + " :" + message);
+                await outputStream.WriteLineAsync("PRIVMSG #" + channelName + " :" + message.Replace("\n", " "));
                 outputStream.Flush();
             }catch (Exception e)
             {
                 Form1.Instance.onAddContent(e.Message);
             }
-        }
+        }//======== 문자열에 \n 이 있으면 짤리는거 같은데?
     }
 }
