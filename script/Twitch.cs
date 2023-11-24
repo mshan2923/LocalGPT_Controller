@@ -65,8 +65,8 @@ namespace LocalGPTController.script
             outputStream.Flush();
 
             //timer = new System.Threading.Timer(ReadChat, null, 0, 100);
-            Form1.Instance.RecieveChatTimer.Tick += RecieveChatTimer_Tick;
-            Form1.Instance.RecieveChatTimer.Enabled = true;
+            MainForm.Instance.RecieveChatTimer.Tick += RecieveChatTimer_Tick;
+            MainForm.Instance.RecieveChatTimer.Enabled = true;
 
             //await ReadFromStreamAsync();
         }
@@ -115,7 +115,7 @@ namespace LocalGPTController.script
             isWaitForChat = false;
             try
             {
-                if (Form1.Instance.isWorkingToLM == false)
+                if (MainForm.Instance.isWorkingToLM == false)
                 {
                     inputStream = new StreamReader(tcpClient.GetStream(), leaveOpen: true);
                     string message = await inputStream.ReadLineAsync();
@@ -125,9 +125,9 @@ namespace LocalGPTController.script
 
                         if (string.IsNullOrEmpty(sendMessage[1]) == false)
                         {
-                            Form1.Instance.onAddContent("[Processing] " + sendMessage[0] + " : " + sendMessage[1]);
+                            MainForm.Instance.onAddContent("[Processing] " + sendMessage[0] + " : " + sendMessage[1]);
 
-                            Form1.Instance.onSend(sendMessage[1]);
+                            MainForm.Instance.onSend(sendMessage[1]);
                         }
                     }
                     isPrintError = false;
@@ -137,14 +137,14 @@ namespace LocalGPTController.script
             {
                 if (isPrintError == false)
                 {
-                    Form1.OnAddContent("Error : " + e.Message + " / Stream Error");
+                    MainForm.OnAddContent("Error : " + e.Message + " / Stream Error");
                     isPrintError = true;
                     MessageBox.Show((e.GetType().FullName + " : " + e.Message), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception e)
             {
-                Form1.OnAddContent("Error : " + e.Message + (tcpClient.Connected ? "(연결됨)" : "(연결끊킴)"));
+                MainForm.OnAddContent("Error : " + e.Message + (tcpClient.Connected ? "(연결됨)" : "(연결끊킴)"));
             }
             finally
             {
@@ -169,8 +169,8 @@ namespace LocalGPTController.script
                 outputStream.Flush();
             }catch (Exception e)
             {
-                Form1.Instance.onAddContent(e.Message);
+                MainForm.Instance.onAddContent(e.Message);
             }
-        }//======== 문자열에 \n 이 있으면 짤리는거 같은데?
+        }//문자열에 \n 이 있으면 짤림
     }
 }

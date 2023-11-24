@@ -6,24 +6,31 @@ using Newtonsoft.Json;
 
 namespace LocalGPTController
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private Twitch twitch;
-        public static Form1 Instance { get; private set; }
+        public static MainForm Instance { get; private set; }
 
         public static float Temperture = 0.2f;
-        public static int MaxToken = 100;
+        public static int MaxToken = 200;
 
+        public static string SystemComment = "Change all answers to Korean.";
         public static string FailToCommnet = "[자동 응답 실패]";
 
         public bool isWorkingToLM = false;
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             Instance = this;
             twitch = new Twitch("Bot");
+
+            trackBar_TempOption.Value = (int)(Temperture * 10);
+            numericUpDown_TokenOption.Value = MaxToken;
+            textBox_SystemOption.Text = SystemComment;
+            textBox_FailCommentOption.Text = FailToCommnet;
         }
 
+        #region MainTab
         public void onAddContent(string text = null)
         {
             string printText;
@@ -56,19 +63,19 @@ namespace LocalGPTController
 
             if (text == null)
             {
-                printText = Form1.Instance.SendTextBox.Text;
+                printText = MainForm.Instance.SendTextBox.Text;
             }
             else
             {
                 printText = text;
             }
 
-            Form1.Instance.ChatListBox.Items.Add(printText);
+            MainForm.Instance.ChatListBox.Items.Add(printText);
 
-            Form1.Instance.SendTextBox.Clear();
-            Form1.Instance.ChatListBox.Update();
+            MainForm.Instance.SendTextBox.Clear();
+            MainForm.Instance.ChatListBox.Update();
 
-            Form1.Instance.ChatListBox.SelectedIndex = Form1.Instance.ChatListBox.Items.Count - 1;
+            MainForm.Instance.ChatListBox.SelectedIndex = MainForm.Instance.ChatListBox.Items.Count - 1;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -104,7 +111,7 @@ namespace LocalGPTController
 
             List<LM_Message> messages = new List<LM_Message>()
             {
-                new LM_Message(Role.system.ToString(), "Change all answers to Korean."),
+                new LM_Message(Role.system.ToString(), SystemComment),
                 new LM_Message(Role.user.ToString(), message)
             };
 
@@ -168,5 +175,41 @@ namespace LocalGPTController
             isWorkingToLM = false;
             //await twitch.ReadFromStreamAsync();
         }
+
+        private void SendTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                button1_Click(sender, e);
+            }
+        }
+        #endregion
+
+        #region OptionTab
+
+        private void trackBar_TempOption_ValueChanged(object sender, EventArgs e)
+        {
+            MessageBox.Show(((TrackBar)sender).Value.ToString());
+            Temperture = ((TrackBar)sender).Value * 0.1f;
+        }
+
+        private void numericUpDown_TokenOption_ValueChanged(object sender, EventArgs e)
+        {
+            MaxToken = ((int)((NumericUpDown)sender).Value);
+        }
+
+        private void textBox_SystemOption_TextChanged(object sender, EventArgs e)
+        {
+            SystemComment = ((TextBox)sender).Text;
+        }
+
+        private void textBox_FailCommentOption_TextChanged(object sender, EventArgs e)
+        {
+            FailToCommnet = ((TextBox)sender).Text;
+        }
+
+        #endregion
+
+
     }
 }
